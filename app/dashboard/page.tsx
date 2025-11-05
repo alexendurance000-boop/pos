@@ -1,39 +1,62 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Package, Users, DollarSign, LogOut } from 'lucide-react';
+import { ShoppingCart, Package, AlertCircle, DollarSign, LogOut, TrendingUp, Users } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const response = await fetch('/api/analytics');
+        if (!response.ok) throw new Error('Failed to fetch analytics');
+        const data = await response.json();
+        setAnalytics(data);
+      } catch (error) {
+        console.error('Analytics error:', error);
+        toast.error('Failed to load analytics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
 
   const stats = [
     {
       title: 'Total Sales',
-      value: '$0.00',
+      value: analytics ? `$${analytics.todaySummary.totalSales.toFixed(2)}` : '$0.00',
       icon: DollarSign,
       description: 'Today',
     },
     {
       title: 'Transactions',
-      value: '0',
+      value: analytics ? analytics.todaySummary.transactionCount : '0',
       icon: ShoppingCart,
       description: 'Today',
     },
     {
       title: 'Products',
-      value: '0',
+      value: analytics ? analytics.todaySummary.productCount : '0',
       icon: Package,
       description: 'In stock',
     },
     {
-      title: 'Customers',
-      value: '0',
-      icon: Users,
-      description: 'Total',
+      title: 'Low Stock',
+      value: analytics ? analytics.todaySummary.lowStockCount : '0',
+      icon: AlertCircle,
+      description: 'Need restock',
     },
   ];
 
@@ -123,25 +146,77 @@ export default function DashboardPage() {
           })}
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Transactions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-500">No transactions yet</p>
-            </CardContent>
-          </Card>
+        {!loading && analytics && (
+          <div className="grid gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  7-Day Sales Trend
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={analytics.salesTrend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="date" stroke="#94a3b8" />
+                    <YAxis stroke="#94a3b8" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1e293b',
+                        border: '1px solid #475569',
+                        borderRadius: '8px',
+                        color: '#f1f5f9',
+                      }}
+                      formatter={(value) => `$${(value as number).toFixed(2)}`}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="sales"
+                      stroke="#3b82f6"
+                      strokeWidth={2}
+                      dot={{ fill: '#3b82f6', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Low Stock Alerts</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-500">No alerts</p>
-            </CardContent>
-          </Card>
-        </div>
+            {analytics.topProducts && analytics.topProducts.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top Products Today</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={analytics.topProducts}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="name" stroke="#94a3b8" />
+                      <YAxis stroke="#94a3b8" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#1e293b',
+                          border: '1px solid #475569',
+                          borderRadius: '8px',
+                          color: '#f1f5f9',
+                        }}
+                        formatter={(value, name) => {
+                          if (name === 'revenue') return `$${(value as number).toFixed(2)}`;
+                          return value;
+                        }}
+                      />
+                      <Legend />
+                      <Bar dataKey="quantity" fill="#10b981" name="Quantity Sold" />
+                      <Bar dataKey="revenue" fill="#f59e0b" name="Revenue" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
