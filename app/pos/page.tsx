@@ -33,13 +33,22 @@ export default function POSPage() {
 
   useEffect(() => {
     const fetchProducts = async () => {
+      console.log("🔄 Fetching products from /api/products...");
       try {
-        const response = await fetch('/api/products?limit=1000');
+        const response = await fetch('/api/products');
+        console.log("📡 Response status:", response.status);
+
         if (!response.ok) throw new Error('Failed to fetch products');
+
         const data = await response.json();
-        setProducts(data.products || []);
+        console.log("📦 Raw API data:", data);
+
+        const productsArray = Array.isArray(data) ? data : data.products || [];
+        console.log(`✅ Loaded ${productsArray.length} products`);
+
+        setProducts(productsArray);
       } catch (error) {
-        console.error('Failed to fetch products:', error);
+        console.error('❌ Failed to fetch products:', error);
         toast.error('Failed to load products');
       }
     };
