@@ -95,15 +95,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Button
-            variant="outline"
-            className="h-24 flex flex-col items-center justify-center gap-2 hover:bg-slate-100"
-            onClick={() => router.push('/products')}
-          >
-            <Package className="h-8 w-8 text-slate-600" />
-            <span className="font-medium">Products</span>
-          </Button>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Button
             variant="outline"
             className="h-24 flex flex-col items-center justify-center gap-2 hover:bg-slate-100"
@@ -111,6 +103,22 @@ export default function DashboardPage() {
           >
             <ShoppingCart className="h-8 w-8 text-slate-600" />
             <span className="font-medium">Point of Sale</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="h-24 flex flex-col items-center justify-center gap-2 hover:bg-slate-100"
+            onClick={() => router.push('/inventory')}
+          >
+            <Package className="h-8 w-8 text-slate-600" />
+            <span className="font-medium">Inventory</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="h-24 flex flex-col items-center justify-center gap-2 hover:bg-slate-100"
+            onClick={() => router.push('/products')}
+          >
+            <AlertCircle className="h-8 w-8 text-slate-600" />
+            <span className="font-medium">Products</span>
           </Button>
           <Button
             variant="outline"
